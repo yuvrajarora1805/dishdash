@@ -103,6 +103,7 @@ export async function sendOrderStatusUpdateEmail({
   to: string; customerName: string; orderId: string; status: string; paymentStatus: string; remarks?: string;
 }) {
   const statusColor = status === 'delivered' ? '#10b981' : status === 'cancelled' ? '#ef4444' : '#3b82f6';
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://www.dishdash555.in';
   
   const html = `
     ${getEmailHead('Order Status Update')}
@@ -134,7 +135,7 @@ export async function sendOrderStatusUpdateEmail({
           ${remarks ? `<div style="margin-top: 16px; border-top: 1px solid #e5e7eb; padding-top: 12px;"><span class="data-label">Seller Remarks:</span><p style="margin: 6px 0 0 0; color: #6b7280; font-style: italic;">"${remarks}"</p></div>` : ''}
         </div>
 
-        <p style="margin-bottom: 0;">You can view full shipment details or trace delivery paths by signing into your <a href="http://localhost:3000/profile" style="color: #1c1917; font-weight: bold; text-decoration: underline;">Customer Profile</a>.</p>
+        <p style="margin-bottom: 0;">You can view full shipment details or trace delivery paths by signing into your <a href="${appUrl}/profile" style="color: #1c1917; font-weight: bold; text-decoration: underline;">Customer Profile</a>.</p>
       </div>
       <div class="footer">
         © 2026 DishDash Storefront. All rights reserved.
