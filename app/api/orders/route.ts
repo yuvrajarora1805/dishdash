@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbRun, dbGet, dbAll, ensureDbReady } from '@/lib/db';
 import { sendOrderStatusUpdateEmail, sendOrderConfirmationEmail } from '@/lib/mail';
 import { verifyAdminSession, unauthorizedResponse, verifyCustomerSession } from '@/lib/auth';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const orderId = crypto.randomUUID();
+    const orderId = uuidv4();
     let totalAmount = 0;
     
     for (const item of items) {
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
       await dbRun(`
         INSERT INTO order_items (id, order_id, product_id, product_name, price, quantity)
         VALUES (?, ?, ?, ?, ?, ?)
-      `, [crypto.randomUUID(), orderId, item.product_id, item.product_name, item.price, item.quantity]);
+      `, [uuidv4(), orderId, item.product_id, item.product_name, item.price, item.quantity]);
 
       if (payment_type !== 'payu' && payment_type !== 'razorpay') {
         // Fetch product to update stock

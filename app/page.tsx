@@ -93,6 +93,25 @@ export default function Home() {
     setIsCartOpen(true)
   }
 
+  const buyNow = (id: string, color: string = 'Standard', qty: number = 1) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.id === id && item.color === color)
+      if (existing) {
+        return prev.map(item => item.id === id && item.color === color ? { ...item, qty: qty } : item)
+      }
+      return [...prev, { id, qty, color }]
+    });
+    const currentCart = JSON.parse(localStorage.getItem('dishdash_cart') || '[]');
+    const existingIdx = currentCart.findIndex((item: any) => item.id === id && item.color === color);
+    if (existingIdx > -1) {
+      currentCart[existingIdx].qty = qty;
+    } else {
+      currentCart.push({ id, qty, color });
+    }
+    localStorage.setItem('dishdash_cart', JSON.stringify(currentCart));
+    window.location.href = '/checkout';
+  }
+
   const updateCartQty = (id: string, color: string, change: number) => {
     setCart(prev => {
       const item = prev.find(i => i.id === id && i.color === color)
@@ -798,35 +817,46 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Add to Cart button with Quantity Selector */}
-                  <div className="pt-4 border-t border-stone-100 flex items-center gap-3">
-                    <div className="flex items-center gap-3 bg-stone-100 border border-stone-200 rounded-xl px-3 py-2">
-                      <button 
-                        type="button" 
-                        onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
-                        className="text-stone-500 hover:text-stone-900 font-bold px-2 cursor-pointer"
+                  {/* Actions Block with Buy Now and Add to Cart */}
+                  <div className="pt-4 border-t border-stone-100 flex flex-col gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 bg-stone-100 border border-stone-200 rounded-xl px-3 py-2">
+                        <button 
+                          type="button" 
+                          onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                          className="text-stone-500 hover:text-stone-900 font-bold px-2 cursor-pointer"
+                        >
+                          -
+                        </button>
+                        <span className="text-sm font-bold text-stone-900 w-5 text-center">{quantity}</span>
+                        <button 
+                          type="button" 
+                          onClick={() => setQuantity(prev => prev + 1)}
+                          className="text-stone-500 hover:text-stone-900 font-bold px-2 cursor-pointer"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <button
+                        disabled={stock === 0}
+                        onClick={() => {
+                          addToCart(selectedProduct.id, selectedColor, quantity);
+                          setSelectedProduct(null);
+                        }}
+                        className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-900 font-bold py-3.5 rounded-xl transition-all border border-stone-250 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                       >
-                        -
-                      </button>
-                      <span className="text-sm font-bold text-stone-900 w-5 text-center">{quantity}</span>
-                      <button 
-                        type="button" 
-                        onClick={() => setQuantity(prev => prev + 1)}
-                        className="text-stone-500 hover:text-stone-900 font-bold px-2 cursor-pointer"
-                      >
-                        +
+                        Add to Cart
                       </button>
                     </div>
                     <button
                       disabled={stock === 0}
                       onClick={() => {
-                        addToCart(selectedProduct.id, selectedColor, quantity);
+                        buyNow(selectedProduct.id, selectedColor, quantity);
                         setSelectedProduct(null);
                       }}
-                      className="flex-1 bg-stone-900 hover:bg-stone-800 text-white font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      className="w-full bg-stone-900 hover:bg-stone-800 text-white font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     >
-                      <ShoppingBag className="w-5 h-5" />
-                      Add to Cart
+                      Buy Now
                     </button>
                   </div>
                 </div>
