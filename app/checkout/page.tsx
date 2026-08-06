@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Check, Loader2, Phone, User, MapPin, ShieldCheck, Package, Truck, Lock, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Check, Loader2, Phone, User, MapPin, ShieldCheck, Package, Truck, Lock, ChevronRight, AlertCircle, RefreshCw } from 'lucide-react'
 import { formatINR } from '@/lib/utils'
 
 const COLOR_OPTIONS = [
@@ -20,6 +20,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [successId, setSuccessId] = useState('')
+  const [paymentError, setPaymentError] = useState('')
   const [step] = useState(1) // 0=Cart, 1=Details, 2=Payment
 
   // Form State
@@ -48,8 +49,15 @@ export default function CheckoutPage() {
       setSuccessId(sId)
       localStorage.removeItem('dishdash_cart')
     }
-    if (err) {
-      alert(err === 'payment_failed' ? 'Payment failed or was cancelled. Please try again.' : 'An error occurred during payment.')
+    if (err === 'payment_failed') {
+      setPaymentError('Your payment was not completed. Please try again — your cart has been saved.')
+    } else if (err) {
+      setPaymentError('Something went wrong during payment. Please try again.')
+    }
+    // Clear error/success params from URL so refresh doesn't re-trigger
+    if (err || sId) {
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
     }
 
     // Pre-fill customer details & address if logged in
@@ -376,7 +384,38 @@ export default function CheckoutPage() {
             {/* ── LEFT: FORM ── */}
             <form onSubmit={handleCheckout} className="space-y-5">
 
-              {/* Section 1: Contact */}
+            {/* ── PAYMENT FAILURE BANNER ── */}
+          <AnimatePresence>
+            {paymentError && (
+              <motion.div
+                initial={{ opacity: 0, y: -12, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                className="bg-red-50 border border-red-200 rounded-2xl p-5 flex items-start gap-4"
+              >
+                <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+                  <AlertCircle className="w-5 h-5 text-red-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-black text-red-800 text-sm mb-1">Payment Not Completed</p>
+                  <p className="text-xs text-red-600 font-medium leading-relaxed">{paymentError}</p>
+                  <p className="text-xs text-red-500 font-semibold mt-2 flex items-center gap-1.5">
+                    <RefreshCw className="w-3 h-3" />
+                    Your cart is intact — you can try again below.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPaymentError('')}
+                  className="text-red-400 hover:text-red-600 transition-colors text-lg font-bold leading-none shrink-0 cursor-pointer"
+                >
+                  ×
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+            {/* Section 1: Contact */}
               <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm">
                 <div className="px-6 py-4 border-b border-stone-100 flex items-center gap-3">
                   <div className="w-7 h-7 rounded-lg bg-stone-900 flex items-center justify-center shrink-0">
