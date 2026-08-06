@@ -2,8 +2,10 @@ import { BarChart3, TrendingUp, Users, ShoppingBag } from 'lucide-react';
 import { SalesChart } from '@/components/admin/DashboardCharts';
 import { formatINR } from '@/lib/utils';
 import { dbGet, dbAll } from '@/lib/db';
+import { connection } from 'next/server';
 
 export default async function AnalyticsPage() {
+  await connection();
   const tenantId = 'dishdash-solo';
 
   // 1. Total Revenue

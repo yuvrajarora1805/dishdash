@@ -2,8 +2,10 @@ import { Users, DollarSign, Package, ShoppingBag } from 'lucide-react';
 import { formatINR } from '@/lib/utils';
 import { SalesChart, CreditLedger } from '@/components/admin/DashboardCharts';
 import { dbGet, dbAll } from '@/lib/db';
+import { connection } from 'next/server';
 
 export default async function AdminDashboard() {
+  await connection();
   const tenantId = 'dishdash-solo';
   
   // Fetch dynamic stats
