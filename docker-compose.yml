@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3012:3012"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=storex
+      - DB_PASSWORD=storex_password
+      - DB_NAME=storex
+    env_file:
+      - .env.docker
+    depends_on:
+      - db
+    networks:
+      - dishdash-network
+
+  db:
+    image: mysql:8.0
+    ports:
+      - "3308:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=storex
+      - MYSQL_USER=storex
+      - MYSQL_PASSWORD=storex_password
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - dishdash-network
+
+networks:
+  dishdash-network:
+    driver: bridge
+
+volumes:
+  db_data:

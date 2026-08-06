@@ -299,16 +299,35 @@ export default function CheckoutPage() {
 
   if (successId) {
     return (
-      <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-4">
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white border border-stone-200 shadow-xl p-8 rounded-3xl max-w-md w-full text-center">
-          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-4 pt-10 pb-20">
+        <motion.div initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} className="bg-white border border-stone-200 shadow-xl p-6 sm:p-10 rounded-3xl max-w-md w-full text-center relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-2 bg-emerald-500" />
+          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
             <Check className="w-10 h-10 text-emerald-600" />
           </div>
           <h1 className="text-3xl font-black text-stone-900 mb-2">Order Confirmed!</h1>
-          <p className="text-stone-500 mb-6">Your order #{successId.slice(0, 8).toUpperCase()} has been successfully placed.</p>
-          <a href="/" className="inline-block bg-stone-900 hover:bg-stone-800 text-white font-bold py-3 px-8 rounded-full transition-colors shadow-lg">
-            Return to Store
-          </a>
+          <p className="text-stone-500 font-semibold mb-6">We've securely received your order.</p>
+          
+          <div className="bg-stone-50 border border-stone-100 rounded-xl p-4 mb-8 text-left space-y-3">
+            <div className="flex justify-between items-center pb-3 border-b border-stone-200">
+              <span className="text-stone-500 text-xs font-bold uppercase tracking-wide">Order ID</span>
+              <span className="font-bold text-stone-900 text-sm">#{successId.slice(0, 8).toUpperCase()}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-stone-500 text-xs font-bold uppercase tracking-wide">Delivery To</span>
+              <span className="font-bold text-stone-900 text-sm">{name}</span>
+            </div>
+            <div className="text-xs text-stone-500 font-medium text-right line-clamp-1">{street}, {city}</div>
+          </div>
+          
+          <div className="flex flex-col gap-3">
+            <a href="/profile" className="w-full bg-stone-900 hover:bg-stone-800 text-white font-bold py-3.5 rounded-xl transition-all shadow-md select-none">
+              View My Orders
+            </a>
+            <a href="/" className="w-full bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold py-3.5 rounded-xl transition-all select-none">
+              Continue Shopping
+            </a>
+          </div>
         </motion.div>
       </div>
     )
@@ -326,7 +345,7 @@ export default function CheckoutPage() {
         {cart.length === 0 ? (
           <div className="text-center py-20 text-stone-500">Your cart is empty.</div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12">
             {/* Form */}
             <form onSubmit={handleCheckout} className="space-y-8">
               <div className="bg-white border border-stone-200 shadow-sm p-6 rounded-2xl space-y-4">

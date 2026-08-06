@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbRun, dbGet, dbAll, ensureDbReady } from '@/lib/db';
 import { sendOrderStatusUpdateEmail } from '@/lib/mail';
+import { verifyAdminSession, unauthorizedResponse, verifyCustomerSession } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -109,6 +110,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  // Only admins can update order status/remarks
+  if (!verifyAdminSession(request)) return unauthorizedResponse();
   try {
     await ensureDbReady();
     const body = await request.json();

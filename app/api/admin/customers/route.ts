@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { dbAll, dbRun, dbGet, ensureDbReady } from '@/lib/db';
+import { verifyAdminSession, unauthorizedResponse } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
+  if (!verifyAdminSession(request)) return unauthorizedResponse();
   try {
     await ensureDbReady();
     const tenantId = 'dishdash-solo';
@@ -24,6 +26,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!verifyAdminSession(request)) return unauthorizedResponse();
   try {
     await ensureDbReady();
     const body = await request.json();
@@ -67,6 +70,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  if (!verifyAdminSession(request)) return unauthorizedResponse();
   try {
     await ensureDbReady();
     const body = await request.json();

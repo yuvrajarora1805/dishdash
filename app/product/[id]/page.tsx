@@ -7,7 +7,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   
   // Resolve params dynamically (Next.js 15+ compatible)
   const resolvedParams = typeof (params as any).then === 'function' ? await params : params;
-  const id = resolvedParams?.id;
+  const id = (resolvedParams as any)?.id;
   
   if (!id) {
     return notFound();

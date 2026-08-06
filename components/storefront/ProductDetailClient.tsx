@@ -272,18 +272,18 @@ export default function ProductDetailClient({ product }: { product: any }) {
             )}
 
             {/* Actions */}
-            <div className="space-y-3 pt-2">
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-stone-200 z-50 flex gap-3 lg:static lg:bg-transparent lg:border-none lg:p-0 lg:flex-col lg:z-auto">
               <button
                 disabled={stock === 0}
                 onClick={() => handleAddToCart(false)}
-                className="w-full bg-stone-200 hover:bg-stone-300 text-stone-900 font-bold py-3.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="flex-1 lg:w-full bg-stone-200 hover:bg-stone-300 text-stone-900 font-bold py-3.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 Add to Cart
               </button>
               <button
                 disabled={stock === 0}
                 onClick={() => handleAddToCart(true)}
-                className="w-full bg-stone-900 hover:bg-stone-800 text-white font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="flex-1 lg:w-full bg-stone-900 hover:bg-stone-800 text-white font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 Buy Now
               </button>
@@ -307,7 +307,7 @@ export default function ProductDetailClient({ product }: { product: any }) {
       </main>
 
       {/* ── FOOTER ── */}
-      <footer className="bg-white border-t border-stone-200 mt-32 py-12 px-4 relative z-10">
+      <footer className="bg-white border-t border-stone-200 mt-32 py-12 px-4 relative z-10 lg:pb-12 pb-32">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-stone-900 flex items-center justify-center shadow-md">
@@ -316,23 +316,13 @@ export default function ProductDetailClient({ product }: { product: any }) {
               </svg>
             </div>
             <span className="font-bold text-stone-900">DishDash</span>
-            <span className="text-stone-400 font-medium text-sm">© 2026</span>
+            <span className="text-stone-400 font-medium text-sm">© 2026. All rights reserved.</span>
           </div>
 
-          <div className="flex items-center gap-6 text-xs text-stone-500 font-semibold">
+          <div className="flex flex-wrap justify-center items-center gap-6 text-xs text-stone-500 font-semibold">
             <a href="/policies/terms" className="hover:text-stone-900 transition-colors">Terms of Service</a>
             <a href="/policies/privacy" className="hover:text-stone-900 transition-colors">Privacy Policy</a>
             <a href="/policies/refund" className="hover:text-stone-900 transition-colors">Refund Policy</a>
-          </div>
-
-          <div className="flex items-center gap-2 text-stone-500 text-xs font-bold">
-            <span>Powered by</span>
-            <span className="text-stone-900 font-extrabold flex items-center gap-1 select-none">
-              <svg className="w-3.5 h-3.5 text-stone-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              DishDash
-            </span>
           </div>
         </div>
       </footer>

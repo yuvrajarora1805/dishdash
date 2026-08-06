@@ -25,6 +25,7 @@ export default function Home() {
   const [selectedColor, setSelectedColor] = useState<string>('Standard')
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0)
   const [quantity, setQuantity] = useState<number>(1)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     // Fetch products for the homepage
@@ -125,7 +126,10 @@ export default function Home() {
       <header className="fixed top-0 left-0 right-0 z-40 glass border-b border-stone-200">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button className="p-2 hover:bg-stone-100 rounded-full transition-colors lg:hidden">
+            <button 
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 hover:bg-stone-100 rounded-full transition-colors lg:hidden cursor-pointer"
+            >
               <Menu className="w-5 h-5 text-stone-700" />
             </button>
             <div className="font-bold text-2xl tracking-tight text-stone-900 flex items-center gap-2 select-none">
@@ -192,6 +196,78 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* ── MOBILE MENU DRAWER ── */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 lg:hidden"
+            />
+            <motion.div 
+              initial={{ x: '-100%' }} 
+              animate={{ x: 0 }} 
+              exit={{ x: '-100%' }} 
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 left-0 bottom-0 w-3/4 max-w-sm bg-white z-50 shadow-2xl flex flex-col lg:hidden"
+            >
+              <div className="p-4 border-b border-stone-100 flex items-center justify-between">
+                <div className="font-bold text-xl text-stone-900 flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-stone-900 flex items-center justify-center">
+                    <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  DishDash
+                </div>
+                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-stone-50 hover:bg-stone-100 rounded-full text-stone-500 cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-6">
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-2 px-2">Categories</h3>
+                  {['Shop All', 'Daily Essentials', 'Tech', 'Lifestyle'].map(cat => (
+                    <button 
+                      key={cat}
+                      onClick={() => { setSelectedCategory(cat); setIsMobileMenuOpen(false); }} 
+                      className={`text-left px-4 py-3 rounded-xl font-bold transition-colors ${selectedCategory === cat ? 'bg-stone-900 text-white' : 'hover:bg-stone-50 text-stone-600'}`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="p-4 border-t border-stone-100">
+                {customer ? (
+                  <div className="flex flex-col gap-3">
+                    <div className="text-sm font-bold text-stone-900 px-2">Hi, {customer.name}</div>
+                    <a href="/profile" className="text-center bg-stone-100 hover:bg-stone-200 text-stone-900 font-bold py-3 rounded-xl transition-colors">My Profile & Orders</a>
+                    <button 
+                      onClick={async () => {
+                        await fetch('/api/auth/logout', { method: 'POST' });
+                        localStorage.removeItem('dishdash_customer');
+                        window.location.reload();
+                      }}
+                      className="text-center border border-stone-200 text-stone-600 hover:text-stone-900 hover:border-stone-300 font-bold py-3 rounded-xl transition-colors cursor-pointer"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                ) : (
+                  <a href="/login" className="block text-center bg-stone-900 text-white font-bold py-3 rounded-xl transition-colors shadow-sm">
+                    Sign In to Account
+                  </a>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── HERO SECTION ── */}
       <main className="relative z-10 pt-32 px-4 max-w-7xl mx-auto">
@@ -297,7 +373,7 @@ export default function Home() {
               <p className="text-xs text-stone-400">Go to the Admin panel to add some items with this category tag!</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProducts.map((product, idx) => {
                 const images = typeof product.images === 'string' ? JSON.parse(product.images) : (product.images || []);
                 const imageSrc = images.length > 0 ? images[0] : 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80';
@@ -344,7 +420,7 @@ export default function Home() {
                   </motion.div>
                 )
               })}
-            </div>
+            </motion.div>
           )}
         </div>
       </main>
@@ -615,23 +691,13 @@ export default function Home() {
               </svg>
             </div>
             <span className="font-bold text-stone-900">DishDash</span>
-            <span className="text-stone-400 font-medium text-sm">© 2026</span>
+            <span className="text-stone-400 font-medium text-sm">© 2026. All rights reserved.</span>
           </div>
 
-          <div className="flex items-center gap-6 text-xs text-stone-500 font-semibold">
+          <div className="flex flex-wrap justify-center items-center gap-6 text-xs text-stone-500 font-semibold">
             <a href="/policies/terms" className="hover:text-stone-900 transition-colors">Terms of Service</a>
             <a href="/policies/privacy" className="hover:text-stone-900 transition-colors">Privacy Policy</a>
             <a href="/policies/refund" className="hover:text-stone-900 transition-colors">Refund Policy</a>
-          </div>
-
-          <div className="flex items-center gap-2 text-stone-500 text-xs font-bold">
-            <span>Powered by</span>
-            <span className="text-stone-900 font-extrabold flex items-center gap-1 select-none">
-              <svg className="w-3.5 h-3.5 text-stone-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              DishDash
-            </span>
           </div>
         </div>
       </footer>

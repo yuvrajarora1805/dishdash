@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { dbAll, dbRun, ensureDbReady } from '@/lib/db';
+import { verifyAdminSession, unauthorizedResponse } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
+  if (!verifyAdminSession(request)) return unauthorizedResponse();
   try {
     await ensureDbReady();
     const { searchParams } = new URL(request.url);
@@ -26,6 +28,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!verifyAdminSession(request)) return unauthorizedResponse();
   try {
     await ensureDbReady();
     const body = await request.json();
