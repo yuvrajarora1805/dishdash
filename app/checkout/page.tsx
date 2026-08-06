@@ -29,7 +29,7 @@ export default function CheckoutPage() {
   const [stateName, setStateName] = useState('')
   const [pin, setPin] = useState('')
 
-  const [paymentMethod, setPaymentMethod] = useState<'upi'|'payu'|'razorpay'>('razorpay')
+  const [paymentMethod] = useState<'razorpay'>('razorpay')
 
   useEffect(() => {
     // Dynamically inject Razorpay Checkout Script
@@ -369,22 +369,13 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <div className="bg-white border border-stone-200 shadow-sm p-6 rounded-2xl space-y-4">
-                <h2 className="text-xl font-bold text-stone-900 mb-4">Payment Method</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[
-                    { id: 'upi', label: 'UPI QR', icon: '📲' },
-                    { id: 'razorpay', label: 'Razorpay Secure', icon: '💳' }
-                  ].map(method => (
-                    <button 
-                      key={method.id} type="button" 
-                      onClick={() => setPaymentMethod(method.id as any)}
-                      className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${paymentMethod === method.id ? 'border-stone-900 bg-stone-50 shadow-sm' : 'border-stone-200 bg-white hover:border-stone-300'}`}
-                    >
-                      <span className="text-2xl mb-2">{method.icon}</span>
-                      <span className={`text-xs font-bold ${paymentMethod === method.id ? 'text-stone-900' : 'text-stone-500'}`}>{method.label}</span>
-                    </button>
-                  ))}
+              <div className="bg-white border border-stone-200 shadow-sm p-6 rounded-2xl flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <h2 className="text-lg font-bold text-stone-900">Secure Payment</h2>
+                  <p className="text-xs text-stone-500 font-semibold">Your transaction is fully encrypted and secured via Razorpay.</p>
+                </div>
+                <div className="px-4 py-2 rounded-xl bg-amber-50 border border-amber-200 font-black text-xs text-amber-800 uppercase tracking-wider flex items-center gap-1.5 select-none">
+                  🛡️ Razorpay Secure
                 </div>
               </div>
 
