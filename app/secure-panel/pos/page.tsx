@@ -99,8 +99,12 @@ export default function AdminPOS() {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        alert(`POS Order placed successfully! Order ID: ${data.id}`);
         setCart([]);
+        setSelectedCustomerId('walk-in');
+        
+        // Wait a tiny bit for state to commit before blocking with alert
+        setTimeout(() => alert(`POS Order placed successfully! Order ID: ${data.id}`), 10);
+        
         // Reload products to get updated stock counts
         const r = await fetch('/api/products?tenantId=dishdash-solo');
         const updatedProds = await r.json();

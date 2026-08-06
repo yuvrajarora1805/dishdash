@@ -24,6 +24,13 @@ export default function Home() {
 
   // Quick View Modal States
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null)
+  const openQuickView = (product: any) => {
+    setSelectedProduct(product)
+    const variants = product.data?.variants?.length ? product.data.variants : COLOR_OPTIONS;
+    setSelectedColor(variants[0].name)
+    setActiveImageIndex(0)
+    setQuantity(1)
+  }
   const [selectedColor, setSelectedColor] = useState<string>('Standard')
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0)
   const [quantity, setQuantity] = useState<number>(1)
@@ -101,7 +108,8 @@ export default function Home() {
   const cartTotal = cart.reduce((total, item) => {
     const product = products.find(p => p.id === item.id)
     if (!product) return total
-    const colorOpt = COLOR_OPTIONS.find(c => c.name === item.color) || { priceMultiplier: 1.0 }
+    const variants = product.data?.variants?.length ? product.data.variants : COLOR_OPTIONS;
+    const colorOpt = variants.find((c: any) => c.name === item.color) || { priceMultiplier: 1.0 }
     const adjustedPrice = Math.round(product.price * colorOpt.priceMultiplier)
     return total + adjustedPrice * item.qty
   }, 0)
@@ -358,7 +366,7 @@ export default function Home() {
             className="lg:w-1/2 relative"
           >
             {products.length > 0 ? (
-              <div className="aspect-[4/3] rounded-[2rem] overflow-hidden relative glass-card p-2 cursor-pointer group" onClick={() => { window.location.href = `/product/${products[0].id}`; }}>
+              <div className="aspect-[4/3] rounded-[2rem] overflow-hidden relative glass-card p-2 cursor-pointer group" onClick={() => { openQuickView(products[0]); }}>
                 <img 
                   src={products[0].images?.[0] || "https://images.unsplash.com/photo-1491933382434-500287f9b54b?w=800&auto=format&fit=crop&q=80"} 
                   alt={products[0].name} 
@@ -431,7 +439,7 @@ export default function Home() {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: idx * 0.07 }}
-                      onClick={() => { window.location.href = `/product/${product.id}`; }}
+                      onClick={() => { openQuickView(product); }}
                       className="glass-card rounded-2xl overflow-hidden group cursor-pointer flex flex-col"
                     >
                       {/* Image */}
@@ -529,7 +537,7 @@ export default function Home() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: Math.min(idx * 0.06, 0.3) }}
-                    onClick={() => { window.location.href = `/product/${product.id}`; }}
+                    onClick={() => { openQuickView(product); }}
                     className="glass-card rounded-2xl overflow-hidden group cursor-pointer flex flex-col"
                   >
                     {/* Product Image */}
@@ -619,7 +627,8 @@ export default function Home() {
                     if (!product) return null
                     const images = typeof product.images === 'string' ? JSON.parse(product.images) : (product.images || []);
                     const imageSrc = images.length > 0 ? images[0] : 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80';
-                    const colorOpt = COLOR_OPTIONS.find(c => c.name === item.color) || { priceMultiplier: 1.0 }
+                    const variants = product.data?.variants?.length ? product.data.variants : COLOR_OPTIONS;
+                    const colorOpt = variants.find((c: any) => c.name === item.color) || { priceMultiplier: 1.0 }
                     const adjustedPrice = Math.round(product.price * colorOpt.priceMultiplier)
                     const colorBadge = item.color !== 'Standard' ? ` (${item.color})` : ''
 
@@ -684,7 +693,8 @@ export default function Home() {
           const subcategory = selectedProduct.data?.subcategory;
           const stock = Number(selectedProduct.data?.stock) || 0;
           
-          const colorOpt = COLOR_OPTIONS.find(c => c.name === selectedColor) || { priceMultiplier: 1.0 };
+          const variants = selectedProduct.data?.variants?.length ? selectedProduct.data.variants : COLOR_OPTIONS;
+          const colorOpt = variants.find((c: any) => c.name === selectedColor) || { priceMultiplier: 1.0 };
           const adjustedPrice = Math.round(selectedProduct.price * colorOpt.priceMultiplier);
 
           return (
@@ -768,17 +778,17 @@ export default function Home() {
                     {/* Color Variation swatches */}
                     <div className="space-y-2">
                       <h4 className="text-xs uppercase font-bold tracking-wider text-stone-400">Select Variant / Color</h4>
-                      <div className="flex gap-3">
-                        {COLOR_OPTIONS.map(opt => (
+                      <div className="flex gap-2">
+                        {(selectedProduct.data?.variants?.length ? selectedProduct.data.variants : COLOR_OPTIONS).map((color: any) => (
                           <button
-                            key={opt.name}
+                            key={color.name}
                             type="button"
-                            onClick={() => setSelectedColor(opt.name)}
-                            title={`${opt.name} (${opt.priceMultiplier > 1 ? `+${Math.round((opt.priceMultiplier - 1) * 100)}% price` : 'Standard Price'})`}
-                            className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center cursor-pointer ${selectedColor === opt.name ? 'border-stone-900 scale-110 shadow-sm' : 'border-stone-200 hover:scale-105'}`}
-                            style={{ backgroundColor: opt.hex }}
+                            onClick={() => setSelectedColor(color.name)}
+                            title={`${color.name} (${color.priceMultiplier > 1 ? `+${Math.round((color.priceMultiplier - 1) * 100)}% price` : 'Standard Price'})`}
+                            className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center cursor-pointer ${selectedColor === color.name ? 'border-stone-900 scale-110 shadow-sm' : 'border-stone-200 hover:scale-105'}`}
+                            style={{ backgroundColor: color.hex }}
                           >
-                            {selectedColor === opt.name && (
+                            {selectedColor === color.name && (
                               <span className="w-2 h-2 rounded-full bg-white shadow-sm" />
                             )}
                           </button>

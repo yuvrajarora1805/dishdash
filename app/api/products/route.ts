@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   try {
     await ensureDbReady();
     const body = await request.json();
-    const { name, price, images, tag, is_trending, stock, subcategory } = body;
+    const { name, price, images, tag, is_trending, stock, subcategory, variants } = body;
 
     if (!name || price === undefined) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -49,7 +49,8 @@ export async function POST(request: Request) {
       tag: tag || 'General', 
       subcategory: subcategory || '',
       is_trending: !!is_trending,
-      stock: Number(stock) || 0 
+      stock: Number(stock) || 0,
+      variants: variants || []
     });
 
     await dbRun(`
@@ -68,7 +69,7 @@ export async function PUT(request: Request) {
   try {
     await ensureDbReady();
     const body = await request.json();
-    const { id, name, price, images, tag, is_trending, stock, subcategory } = body;
+    const { id, name, price, images, tag, is_trending, stock, subcategory, variants } = body;
 
     if (!id || !name || price === undefined) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -79,7 +80,8 @@ export async function PUT(request: Request) {
       tag: tag || 'General', 
       subcategory: subcategory || '',
       is_trending: !!is_trending,
-      stock: Number(stock) || 0 
+      stock: Number(stock) || 0,
+      variants: variants || []
     });
 
     await dbRun(`

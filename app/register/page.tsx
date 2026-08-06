@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -13,6 +13,57 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Dynamically load Google Identity Services SDK script on mount
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    script.onload = () => {
+      if ((window as any).google) {
+        (window as any).google.accounts.id.initialize({
+          client_id: '628375430211-aq8gbjeag8obgb9dt4ml48etdtqll4l0.apps.googleusercontent.com', // Google Public App Client ID
+          callback: handleGoogleCredential
+        });
+
+        (window as any).google.accounts.id.renderButton(
+          document.getElementById('google-signin-btn'),
+          { theme: 'outline', size: 'large', width: 384, text: 'signup_with' }
+        );
+      }
+    };
+
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
+
+  const handleGoogleCredential = async (response: any) => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: response.credential })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Google Sign-Up failed');
+      }
+      localStorage.setItem('dishdash_customer', JSON.stringify(data.customer));
+      window.location.href = '/';
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,6 +212,19 @@ export default function RegisterPage() {
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Account'}
           </button>
         </form>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-stone-200"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-stone-500 font-semibold text-xs">OR</span>
+          </div>
+        </div>
+
+        <div className="flex justify-center w-full">
+          <div id="google-signin-btn" className="w-full flex justify-center"></div>
+        </div>
 
         <div className="text-center text-xs font-semibold text-stone-400 pt-2 border-t border-stone-100">
           Already have an account? <a href="/login" className="text-stone-900 underline">Sign In</a>

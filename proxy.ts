@@ -21,21 +21,21 @@ async function getExpectedToken() {
     .join("");
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Protect all /admin routes, except /admin/login
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+  // Protect all /secure-panel routes
+  if (pathname.startsWith('/secure-panel')) {
     const sessionCookie = request.cookies.get('admin_session');
     
     if (!sessionCookie) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
+      return NextResponse.redirect(new URL('/secure-login', request.url));
     }
 
     const expectedToken = await getExpectedToken();
     if (sessionCookie.value !== expectedToken) {
       // Invalid session token, clear cookie and redirect to login
-      const response = NextResponse.redirect(new URL('/admin/login', request.url));
+      const response = NextResponse.redirect(new URL('/secure-login', request.url));
       response.cookies.delete('admin_session');
       return response;
     }
@@ -45,5 +45,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/secure-panel/:path*'],
 };

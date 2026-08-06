@@ -27,6 +27,7 @@ export default function AdminProducts() {
   const [subcategory, setSubcategory] = useState('Audio');
   const [isTrending, setIsTrending] = useState(false);
   const [stock, setStock] = useState('');
+  const [variants, setVariants] = useState<{name: string, hex: string, priceMultiplier: number}[]>([]);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -96,6 +97,7 @@ export default function AdminProducts() {
     setSubcategory('Audio');
     setIsTrending(true);
     setStock('0');
+    setVariants([]);
     setIsModalOpen(true);
   };
 
@@ -122,6 +124,7 @@ export default function AdminProducts() {
     setSubcategory(subVal);
     setIsTrending(!!p.data?.is_trending);
     setStock(String(p.data?.stock || '0'));
+    setVariants(p.data?.variants || []);
     setIsModalOpen(true);
   };
 
@@ -138,7 +141,8 @@ export default function AdminProducts() {
       tag,
       subcategory,
       is_trending: isTrending,
-      stock: Number(stock)
+      stock: Number(stock),
+      variants
     };
 
     try {
@@ -423,6 +427,64 @@ export default function AdminProducts() {
                     />
                     <label htmlFor="isTrending" className="text-sm font-semibold text-stone-700 select-none">Show in Trending Section on Homepage</label>
                   </div>
+
+                  <div className="space-y-3 pt-4 border-t border-stone-200">
+                    <label className="text-xs font-bold text-stone-500 uppercase tracking-wider">Product Variants</label>
+                    <div className="space-y-2">
+                      {variants.map((v, idx) => (
+                        <div key={idx} className="flex gap-2 items-center bg-stone-50 p-2 rounded-lg border border-stone-200">
+                          <input
+                            type="text"
+                            placeholder="Name (e.g. Red)"
+                            value={v.name}
+                            onChange={(e) => {
+                              const newV = [...variants];
+                              newV[idx].name = e.target.value;
+                              setVariants(newV);
+                            }}
+                            className="flex-1 bg-white border border-stone-200 rounded px-2 py-1 text-sm outline-none"
+                          />
+                          <input
+                            type="color"
+                            value={v.hex}
+                            onChange={(e) => {
+                              const newV = [...variants];
+                              newV[idx].hex = e.target.value;
+                              setVariants(newV);
+                            }}
+                            className="w-8 h-8 rounded border-none cursor-pointer p-0"
+                          />
+                          <input
+                            type="number"
+                            step="0.01"
+                            placeholder="Multiplier"
+                            value={v.priceMultiplier}
+                            onChange={(e) => {
+                              const newV = [...variants];
+                              newV[idx].priceMultiplier = Number(e.target.value);
+                              setVariants(newV);
+                            }}
+                            className="w-20 bg-white border border-stone-200 rounded px-2 py-1 text-sm outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setVariants(variants.filter((_, i) => i !== idx))}
+                            className="p-1 text-red-500 hover:bg-red-100 rounded"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setVariants([...variants, { name: 'Standard', hex: '#000000', priceMultiplier: 1.0 }])}
+                        className="text-xs font-bold text-stone-700 bg-stone-100 hover:bg-stone-200 border border-stone-200 px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        + Add Variant
+                      </button>
+                    </div>
+                  </div>
+
                 </div>
 
                 {/* Right Side: Images Upload */}

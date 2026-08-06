@@ -67,6 +67,14 @@ export default async function AdminDashboard() {
     date: new Date(row.date).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
   }));
 
+  // Fetch Payment Method Breakdown
+  const paymentStatsRaw = await dbAll(`
+    SELECT payment_type, SUM(total_amount) as amount 
+    FROM orders 
+    WHERE tenant_id = ? AND status != 'cancelled' 
+    GROUP BY payment_type
+  `, [tenantId]);
+
   return (
     <div className="space-y-8">
       <div>
@@ -103,6 +111,23 @@ export default async function AdminDashboard() {
           <div className="flex items-start h-[270px]">
             <CreditLedger data={ledgerData} />
           </div>
+        </div>
+      </div>
+
+      {/* Payment Method Breakdown */}
+      <div className="bg-white border border-stone-200 shadow-sm rounded-xl p-6">
+        <h2 className="text-xl font-bold text-stone-900 mb-4">Revenue by Payment Method</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {paymentStatsRaw.length === 0 ? (
+            <div className="text-stone-500 text-sm">No payment data available.</div>
+          ) : (
+            paymentStatsRaw.map((stat: any) => (
+              <div key={stat.payment_type} className="bg-stone-50 border border-stone-200 rounded-lg p-4 flex flex-col justify-between">
+                <span className="text-xs uppercase font-bold tracking-wider text-stone-500 mb-2">{stat.payment_type}</span>
+                <span className="text-xl font-black text-stone-900">{formatINR(Number(stat.amount))}</span>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

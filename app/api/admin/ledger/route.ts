@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { dbAll, dbRun, ensureDbReady } from '@/lib/db';
+import { dbAll, dbRun, dbGet, ensureDbReady } from '@/lib/db';
 import { verifyAdminSession, unauthorizedResponse } from '@/lib/auth';
+import { sendKhataSettlementEmail } from '@/lib/mail';
 
 export async function GET(request: NextRequest) {
   if (!verifyAdminSession(request)) return unauthorizedResponse();
@@ -50,6 +51,22 @@ export async function POST(request: NextRequest) {
       INSERT INTO khata_entries (id, tenant_id, customer_id, type, amount, description, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [entryId, tenantId, customerId, type, Number(amount), description || null, now]);
+
+    if (type === 'debit') {
+      const customer = await dbGet('SELECT name, email FROM customers WHERE id = ?', [customerId]);
+      if (customer && customer.email) {
+        const dateStr = new Date(now).toLocaleString('en-IN', {
+          day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        await sendKhataSettlementEmail({
+          to: customer.email,
+          customerName: customer.name,
+          amount: Number(amount),
+          description: description || 'Payment Received',
+          date: dateStr
+        }).catch(err => console.error('Failed to send khata email:', err));
+      }
+    }
 
     return NextResponse.json({ success: true, message: 'Ledger entry successfully recorded!' });
   } catch (error: any) {

@@ -26,7 +26,7 @@ export default function AdminLogin() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        router.push('/admin');
+        router.push('/secure-panel');
         router.refresh();
       } else {
         setError(data.error || 'Invalid credentials');

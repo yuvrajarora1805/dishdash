@@ -20,7 +20,8 @@ export default function ProductDetailClient({ product }: { product: any }) {
   const replacementPolicy = product.data?.replacement_policy || null;
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [selectedColor, setSelectedColor] = useState('Standard');
+  const variantsList = product.data?.variants?.length ? product.data.variants : COLOR_OPTIONS;
+  const [selectedColor, setSelectedColor] = useState(variantsList[0].name);
   const [quantity, setQuantity] = useState(1);
   const [cartCount, setCartCount] = useState(0);
   const [customer, setCustomer] = useState<any | null>(null);
@@ -45,7 +46,7 @@ export default function ProductDetailClient({ product }: { product: any }) {
     setTimeout(() => setToast(''), 2500);
   };
 
-  const colorOpt = COLOR_OPTIONS.find(c => c.name === selectedColor) || { priceMultiplier: 1.0 };
+  const colorOpt = variantsList.find((c: any) => c.name === selectedColor) || { priceMultiplier: 1.0 };
   const adjustedPrice = Math.round(product.price * colorOpt.priceMultiplier);
 
   const handleAddToCart = (redirect: boolean = false) => {
@@ -220,22 +221,19 @@ export default function ProductDetailClient({ product }: { product: any }) {
             </div>
 
             {/* Color options */}
-            <div className="space-y-3 border-b border-stone-200 pb-5">
-              <h3 className="text-[10px] uppercase font-bold tracking-wider text-stone-400">
-                Finish / Variant: <span className="text-stone-900 normal-case">{selectedColor}</span>
-                {(colorOpt as any).priceMultiplier > 1 && (
-                  <span className="text-stone-400 font-normal"> (+{Math.round(((colorOpt as any).priceMultiplier - 1) * 100)}%)</span>
-                )}
-              </h3>
+            <div className="space-y-4">
+              <h3 className="text-sm uppercase font-bold tracking-wider text-stone-500">Select Variant / Color</h3>
               <div className="flex gap-3">
-                {COLOR_OPTIONS.map(opt => (
+                {variantsList.map((opt: any) => (
                   <button
                     key={opt.name}
                     type="button"
                     onClick={() => setSelectedColor(opt.name)}
-                    title={opt.name}
-                    className={`w-9 h-9 rounded-full border-2 transition-all flex items-center justify-center cursor-pointer ${
-                      selectedColor === opt.name ? 'border-stone-900 scale-110 shadow-md' : 'border-stone-200 hover:scale-105 hover:border-stone-400'
+                    title={`${opt.name} (${opt.priceMultiplier > 1 ? `+${Math.round((opt.priceMultiplier - 1) * 100)}% price` : 'Standard Price'})`}
+                    className={`group relative w-12 h-12 rounded-full border-2 transition-all flex items-center justify-center cursor-pointer overflow-hidden ${
+                      selectedColor === opt.name 
+                        ? 'border-stone-900 scale-110 shadow-md ring-4 ring-stone-900/10' 
+                        : 'border-stone-200 hover:scale-105 hover:border-stone-300'
                     }`}
                     style={{ backgroundColor: opt.hex }}
                   >
@@ -271,7 +269,12 @@ export default function ProductDetailClient({ product }: { product: any }) {
           <div className="lg:col-span-3 hidden lg:block">
             <div className="bg-white border border-stone-200 rounded-3xl p-6 shadow-md space-y-5 sticky top-24">
               <div>
-                <div className="text-3xl font-black text-stone-900">{formatINR(adjustedPrice)}</div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-bold text-stone-900 truncate pr-2 max-w-[120px]">{selectedColor}</span>
+                </div>
+                <div className="font-black text-stone-900">
+                  {formatINR(adjustedPrice)}
+                </div>
                 <div className="text-emerald-600 font-bold text-sm mt-1 flex items-center gap-1.5">
                   <Truck className="w-4 h-4" /> FREE delivery
                 </div>

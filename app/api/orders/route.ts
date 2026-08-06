@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbRun, dbGet, dbAll, ensureDbReady } from '@/lib/db';
-import { sendOrderStatusUpdateEmail } from '@/lib/mail';
+import { sendOrderStatusUpdateEmail, sendOrderConfirmationEmail } from '@/lib/mail';
 import { verifyAdminSession, unauthorizedResponse, verifyCustomerSession } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
@@ -90,14 +90,29 @@ export async function POST(request: NextRequest) {
       `, [tenant_id, customer_phone]);
 
       if (customer) {
-        // Record khata transaction
+        // Record khata transaction (Purchase uses 'credit' type to increase pending balance)
         await dbRun(`
           INSERT INTO khata_entries (id, tenant_id, customer_id, type, amount, description, order_id, created_at)
-          VALUES (?, ?, ?, 'debit', ?, ?, ?, ?)
+          VALUES (?, ?, ?, 'credit', ?, ?, ?, ?)
         `, [crypto.randomUUID(), tenant_id, customer.customer_id, totalAmount, 'Store Purchase', orderId, now]);
         
         // Mark order as paid for khata
         await dbRun('UPDATE orders SET payment_status = "paid" WHERE id = ?', [orderId]);
+      }
+    }
+
+    // Attempt to send email confirmation if customer_phone exists (POS or web)
+    if (customer_phone && customer_phone !== 'POS-Store') {
+      const customer = await dbGet('SELECT email FROM customers WHERE phone = ? AND tenant_id = ?', [customer_phone, tenant_id]);
+      if (customer && customer.email) {
+        await sendOrderConfirmationEmail({
+          to: customer.email,
+          customerName: customer_name,
+          orderId: orderId,
+          totalAmount,
+          paymentMethod: payment_type,
+          items: items
+        }).catch(err => console.error('Failed to send order email:', err));
       }
     }
 

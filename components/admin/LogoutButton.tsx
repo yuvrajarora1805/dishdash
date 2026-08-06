@@ -16,7 +16,8 @@ export default function LogoutButton() {
         method: 'POST',
       });
       if (res.ok) {
-        router.push('/admin/login');
+        document.cookie = 'admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        router.push('/secure-login');
         router.refresh();
       }
     } catch (err) {
