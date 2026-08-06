@@ -181,6 +181,19 @@ export function ensureDbReady(): Promise<void> {
           )
         `);
 
+        await dbRun(`
+          CREATE TABLE IF NOT EXISTS reviews (
+            id VARCHAR(255) PRIMARY KEY,
+            product_id VARCHAR(255) NOT NULL,
+            customer_id VARCHAR(255),
+            customer_name VARCHAR(255) NOT NULL,
+            rating TINYINT NOT NULL,
+            review_text TEXT,
+            created_at BIGINT NOT NULL,
+            INDEX idx_product_id (product_id)
+          )
+        `);
+
         await initSoloTenant();
 
         // Check if any products exist, if not seed some

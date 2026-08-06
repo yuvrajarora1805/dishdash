@@ -19,6 +19,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('Shop All')
   const [customer, setCustomer] = useState<any | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   // Quick View Modal States
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null)
@@ -106,18 +108,17 @@ export default function Home() {
 
   const cartCount = cart.reduce((acc, item) => acc + item.qty, 0)
 
-  // Filtering products based on category tag
+  // Filtering products based on category tag AND search query
   const filteredProducts = products.filter(product => {
+    // Search filter
+    if (searchQuery) {
+      return product.name?.toLowerCase().includes(searchQuery.toLowerCase());
+    }
+    // Category filter
     if (selectedCategory === 'Shop All') return true;
-    if (selectedCategory === 'Daily Essentials') {
-      return product.data?.tag === 'Daily Essentials';
-    }
-    if (selectedCategory === 'Tech') {
-      return product.data?.tag === 'Electronics';
-    }
-    if (selectedCategory === 'Lifestyle') {
-      return product.data?.tag === 'Daily Essentials' && product.data?.subcategory === 'Lifestyle';
-    }
+    if (selectedCategory === 'Daily Essentials') return product.data?.tag === 'Daily Essentials';
+    if (selectedCategory === 'Tech') return product.data?.tag === 'Electronics';
+    if (selectedCategory === 'Lifestyle') return product.data?.tag === 'Daily Essentials' && product.data?.subcategory === 'Lifestyle';
     return true;
   });
 
@@ -140,6 +141,37 @@ export default function Home() {
             >
               <Menu className="w-5 h-5 text-stone-700" />
             </button>
+
+            {/* ── SEARCH BAR ── */}
+            <div className="relative hidden lg:flex items-center">
+              <AnimatePresence initial={false}>
+                {isSearchOpen && (
+                  <motion.input
+                    key="search-input"
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: 220, opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                    autoFocus
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    onBlur={() => { if (!searchQuery) setIsSearchOpen(false) }}
+                    placeholder="Search products..."
+                    className="bg-stone-100 border border-stone-200 rounded-full pl-4 pr-10 py-2 text-sm font-semibold text-stone-900 outline-none focus:border-stone-400 placeholder:text-stone-400 placeholder:font-normal"
+                  />
+                )}
+              </AnimatePresence>
+              <button
+                onClick={() => { setIsSearchOpen(v => !v); if (isSearchOpen) setSearchQuery('') }}
+                className="absolute right-0 p-2 hover:bg-stone-100 rounded-full transition-colors cursor-pointer z-10"
+              >
+                {isSearchOpen && searchQuery ? (
+                  <X className="w-4 h-4 text-stone-600" onClick={() => { setSearchQuery(''); setIsSearchOpen(false); }} />
+                ) : (
+                  <Search className="w-4 h-4 text-stone-600" />
+                )}
+              </button>
+            </div>
             <div className="font-bold text-2xl tracking-tight text-stone-900 flex items-center gap-2 select-none">
               <div className="w-8 h-8 rounded-xl bg-stone-900 flex items-center justify-center shadow-md">
                 <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -298,14 +330,20 @@ export default function Home() {
             </p>
             <div className="flex items-center gap-4">
               <button 
-                onClick={() => setSelectedCategory('Shop All')}
+                onClick={() => {
+                  setSelectedCategory('Shop All');
+                  document.getElementById('products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
                 className="bg-stone-900 hover:bg-stone-800 text-white px-8 py-4 rounded-full font-bold transition-all flex items-center gap-2 shadow-lg cursor-pointer"
               >
                 Start Shopping
                 <ArrowRight className="w-5 h-5" />
               </button>
               <button 
-                onClick={() => setSelectedCategory('Tech')}
+                onClick={() => {
+                  setSelectedCategory('Tech');
+                  document.getElementById('products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
                 className="px-8 py-4 rounded-full font-bold text-stone-700 border border-stone-300 hover:bg-stone-100 transition-all cursor-pointer"
               >
                 Explore Tech
@@ -345,29 +383,125 @@ export default function Home() {
           </motion.div>
         </div>
 
-        {/* ── PRODUCT GRID (Dynamic Trending) ── */}
-        <div>
+        {/* ── MOBILE SEARCH BAR ── */}
+        <div className="lg:hidden mb-6">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+            <input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search products..."
+              className="w-full bg-white border border-stone-200 rounded-full pl-11 pr-4 py-3 text-sm font-semibold text-stone-900 outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900/10 shadow-sm placeholder:text-stone-400 placeholder:font-normal"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-stone-400 hover:text-stone-900 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ── NEW ARRIVALS SECTION ── */}
+        {!searchQuery && (() => {
+          const newArrivals = [...products]
+            .sort((a, b) => (b.created_at || 0) - (a.created_at || 0))
+            .slice(0, 4)
+          if (newArrivals.length === 0) return null
+          return (
+            <div className="mb-16">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+                      🆕 New Arrivals
+                    </span>
+                  </div>
+                  <h2 className="text-3xl font-black text-stone-900">Just Dropped</h2>
+                  <p className="text-stone-500 text-sm mt-1">The latest additions to our collection</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+                {newArrivals.map((product, idx) => {
+                  const images = typeof product.images === 'string' ? JSON.parse(product.images) : (product.images || []);
+                  const imageSrc = images.length > 0 ? images[0] : 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80';
+                  return (
+                    <motion.div
+                      key={`new-${product.id}`}
+                      initial={{ opacity: 0, y: 16 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: idx * 0.07 }}
+                      onClick={() => { window.location.href = `/product/${product.id}`; }}
+                      className="glass-card rounded-2xl overflow-hidden group cursor-pointer flex flex-col"
+                    >
+                      {/* Image */}
+                      <div className="relative bg-stone-50 overflow-hidden" style={{aspectRatio:'1/1'}}>
+                        <img src={imageSrc} alt={product.name} className="w-full h-full object-cover card-img-zoom" />
+                        <div className="absolute top-2 left-2">
+                          <span className="badge-new">NEW</span>
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); addToCart(product.id); }}
+                            className="w-full bg-white text-stone-900 font-bold text-xs py-2.5 rounded-xl hover:bg-stone-50 transition-colors shadow-lg cursor-pointer"
+                          >
+                            Add to Cart
+                          </button>
+                        </div>
+                      </div>
+                      {/* Info */}
+                      <div className="p-3 flex flex-col gap-1 flex-1">
+                        <p className="text-[11px] font-semibold text-stone-400 leading-tight line-clamp-1">{product.data?.tag || 'General'}</p>
+                        <h3 className="font-bold text-stone-900 text-sm leading-tight line-clamp-2">{product.name}</h3>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                          <span className="text-[11px] font-bold text-stone-500">4.9</span>
+                        </div>
+                        <div className="font-black text-base text-stone-900 mt-auto pt-1">{formatINR(product.price)}</div>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+              <div className="border-b border-stone-200 mt-16" />
+            </div>
+          )
+        })()}
+
+        {/* ── PRODUCT GRID (Trending / Filtered) ── */}
+        <div id="products">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <div>
-              <h2 className="text-3xl font-black mb-2 text-stone-900">Trending Products</h2>
-              <p className="text-stone-500">The most popular items right now</p>
+              {searchQuery ? (
+                <>
+                  <h2 className="text-3xl font-black mb-1 text-stone-900">Search Results</h2>
+                  <p className="text-stone-500">Showing results for "<span className="font-bold text-stone-700">{searchQuery}</span>"</p>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-3xl font-black mb-2 text-stone-900">Trending Products</h2>
+                  <p className="text-stone-500">The most popular items right now</p>
+                </>
+              )}
             </div>
             
-            {/* Category Select Navigation bar */}
-            <div className="flex flex-wrap items-center gap-2 border border-stone-200 bg-white p-1 rounded-full shadow-sm">
-              {['Shop All', 'Daily Essentials', 'Tech', 'Lifestyle'].map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                    selectedCategory === cat
-                      ? 'bg-stone-900 text-white shadow-sm'
-                      : 'bg-transparent text-stone-600 hover:text-stone-900'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+            {/* Category Select — horizontal scroll on mobile */}
+            <div className="w-full overflow-x-auto pb-1">
+              <div className="flex items-center gap-2 border border-stone-200 bg-white p-1 rounded-2xl shadow-sm w-max min-w-full">
+                {['Shop All', 'Daily Essentials', 'Tech', 'Lifestyle'].map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                      selectedCategory === cat
+                        ? 'bg-stone-900 text-white shadow-sm'
+                        : 'bg-transparent text-stone-500 hover:text-stone-900 hover:bg-stone-50'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -381,49 +515,55 @@ export default function Home() {
               <p className="text-xs text-stone-400">Go to the Admin panel to add some items with this category tag!</p>
             </div>
           ) : (
-            <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <motion.div layout className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
               {filteredProducts.map((product, idx) => {
                 const images = typeof product.images === 'string' ? JSON.parse(product.images) : (product.images || []);
                 const imageSrc = images.length > 0 ? images[0] : 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80';
-                const tag = product.data?.tag || 'Trending';
+                const tag = product.data?.tag || 'General';
                 
                 return (
                   <motion.div 
                     key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
+                    layout
+                    initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ delay: idx * 0.1 }}
+                    transition={{ delay: Math.min(idx * 0.06, 0.3) }}
                     onClick={() => { window.location.href = `/product/${product.id}`; }}
-                    className="glass-card rounded-[1.5rem] p-3 group flex flex-col hover:shadow-xl transition-shadow cursor-pointer"
+                    className="glass-card rounded-2xl overflow-hidden group cursor-pointer flex flex-col"
                   >
-                    <div className="aspect-square rounded-2xl overflow-hidden relative mb-4 bg-stone-100">
+                    {/* Product Image */}
+                    <div className="relative bg-stone-50 overflow-hidden" style={{aspectRatio:'1/1'}}>
                       <img 
                         src={imageSrc} 
                         alt={product.name} 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        className="w-full h-full object-cover card-img-zoom"
                       />
-                      <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-stone-900 shadow-sm">
-                        {tag}
+                      {/* Category badge */}
+                      <div className="absolute top-2 left-2">
+                        <span className="badge-category">{tag}</span>
                       </div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-stone-900/40 via-stone-900/0 to-stone-900/0 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                      {/* Hover overlay with Add to Cart */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
                         <button 
                           onClick={(e) => { e.stopPropagation(); addToCart(product.id); }}
-                          className="w-full bg-white text-stone-900 font-bold py-3 rounded-xl hover:bg-stone-50 transition-colors shadow-lg transform translate-y-4 group-hover:translate-y-0 duration-300 cursor-pointer"
+                          className="w-full bg-white text-stone-900 font-bold text-xs py-2.5 rounded-xl hover:bg-stone-50 transition-colors shadow-lg cursor-pointer"
                         >
                           Add to Cart
                         </button>
                       </div>
                     </div>
-                    <div className="px-3 pb-3 flex-grow flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center gap-1 mb-2">
-                          <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                          <span className="text-sm font-bold text-stone-700">4.9</span>
-                        </div>
-                        <h3 className="font-bold text-stone-900 text-lg leading-tight mb-2">{product.name}</h3>
+
+                    {/* Card Info */}
+                    <div className="p-3 flex flex-col gap-1 flex-1">
+                      <p className="text-[11px] font-semibold text-stone-400 leading-tight line-clamp-1">{tag}</p>
+                      <h3 className="font-bold text-stone-900 text-sm leading-tight line-clamp-2">{product.name}</h3>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                        <span className="text-[11px] font-bold text-stone-500">4.9</span>
+                        <span className="text-[10px] text-stone-300 font-semibold">(128)</span>
                       </div>
-                      <div className="font-black text-xl text-stone-900 mt-2">{formatINR(product.price)}</div>
+                      <div className="font-black text-base text-stone-900 mt-auto pt-1">{formatINR(product.price)}</div>
                     </div>
                   </motion.div>
                 )
