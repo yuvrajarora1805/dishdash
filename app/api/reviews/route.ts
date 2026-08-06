@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Use guest name if provided and not logged in
-  if (!customer && guestName) customerName = guestName;
+  if (!customerIdStr && guestName) customerName = guestName;
 
   // Prevent duplicate review from same customer on same product
   if (customerId) {
