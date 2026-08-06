@@ -2,8 +2,13 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 async function getExpectedToken() {
-  const adminUser = process.env.ADMIN_USERNAME || 'admin';
-  const adminPass = process.env.ADMIN_PASSWORD || 'admin123';
+  const adminUser = process.env.ADMIN_USERNAME;
+  const adminPass = process.env.ADMIN_PASSWORD;
+
+  if (!adminUser || !adminPass) {
+    throw new Error('FATAL: ADMIN_USERNAME and ADMIN_PASSWORD environment variables are not set.');
+  }
+
   const enc = new TextEncoder();
   
   // Use Web Crypto API compatible with Next.js Edge Runtime

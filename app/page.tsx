@@ -203,9 +203,6 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="p-2 hover:bg-stone-100 rounded-full transition-colors text-stone-700 hidden sm:block">
-              <Search className="w-5 h-5" />
-            </button>
             <button 
               onClick={() => setIsCartOpen(true)}
               className="relative p-2 hover:bg-stone-100 rounded-full transition-colors text-stone-700 mr-2"
@@ -372,11 +369,11 @@ export default function Home() {
                   alt={products[0].name} 
                   className="w-full h-full object-cover rounded-[1.5rem] transition-transform duration-700 group-hover:scale-105 bg-stone-100"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-black/0 rounded-[1.5rem]" />
-                <div className="absolute bottom-6 left-6 right-6 glass p-4 rounded-2xl flex items-center justify-between border-none">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-[1.5rem]" />
+                <div className="absolute bottom-6 left-6 right-6 glass p-4 rounded-2xl flex items-center justify-between border-white/40">
                   <div>
-                    <h3 className="font-bold text-white text-lg">{products[0].name}</h3>
-                    <p className="text-sm text-stone-200 font-medium">{products[0].data?.tag || 'Trending'}</p>
+                    <h3 className="font-black text-stone-900 text-lg leading-tight">{products[0].name}</h3>
+                    <p className="text-sm text-stone-600 font-bold mt-1">{products[0].data?.tag || 'Trending'}</p>
                   </div>
                   <div className="font-black text-xl text-stone-900 bg-white px-4 py-1 rounded-full shadow-lg">
                     {formatINR(products[0].price)}

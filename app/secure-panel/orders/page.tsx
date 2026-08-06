@@ -9,6 +9,7 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
   
   // Drawer / Details State
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
@@ -88,12 +89,22 @@ export default function AdminOrders() {
     }
   };
 
-  const filteredOrders = orders.filter(o => 
-    o.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    o.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    o.customer_phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    o.payment_type.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredOrders = orders.filter(o => {
+    const matchesSearch = 
+      o.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      o.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      o.customer_phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      o.payment_type.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'All' || o.status.toLowerCase() === statusFilter.toLowerCase();
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  const totalOrders = orders.length;
+  const pendingOrders = orders.filter(o => o.status === 'pending').length;
+  const deliveredOrders = orders.filter(o => o.status === 'delivered').length;
+  const cancelledOrders = orders.filter(o => o.status === 'cancelled').length;
 
   return (
     <div className="space-y-6">
@@ -104,8 +115,45 @@ export default function AdminOrders() {
         </div>
       </div>
 
+      {/* Analytics Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+          <div className="text-stone-500 font-bold text-xs uppercase tracking-wider mb-2">Total Orders</div>
+          <div className="text-2xl font-black text-stone-900">{totalOrders}</div>
+        </div>
+        <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+          <div className="text-blue-600 font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div>Pending</div>
+          <div className="text-2xl font-black text-stone-900">{pendingOrders}</div>
+        </div>
+        <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+          <div className="text-emerald-600 font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-600"></div>Delivered</div>
+          <div className="text-2xl font-black text-stone-900">{deliveredOrders}</div>
+        </div>
+        <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+          <div className="text-red-600 font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-red-600"></div>Cancelled</div>
+          <div className="text-2xl font-black text-stone-900">{cancelledOrders}</div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {['All', 'Pending', 'Processing', 'Delivered', 'Cancelled'].map(status => (
+          <button 
+            key={status}
+            onClick={() => setStatusFilter(status)}
+            className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-colors cursor-pointer ${
+              statusFilter === status 
+                ? 'bg-stone-900 text-white shadow-sm' 
+                : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-50'
+            }`}
+          >
+            {status}
+          </button>
+        ))}
+      </div>
+
       <div className="bg-white border border-stone-200 shadow-sm rounded-2xl overflow-hidden">
-        <div className="p-4 border-b border-stone-200 bg-stone-50 flex items-center justify-between">
+        <div className="p-4 border-b border-stone-200 bg-stone-50 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -transtone-y-1/2 w-4 h-4 text-stone-400" />
             <input 

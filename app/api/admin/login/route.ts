@@ -6,8 +6,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { username, password } = body;
 
-    const adminUser = process.env.ADMIN_USERNAME || 'admin';
-    const adminPass = process.env.ADMIN_PASSWORD || 'admin123';
+    const adminUser = process.env.ADMIN_USERNAME;
+    const adminPass = process.env.ADMIN_PASSWORD;
+
+    if (!adminUser || !adminPass) {
+      console.error('FATAL: ADMIN_USERNAME and ADMIN_PASSWORD environment variables are not set.');
+      return NextResponse.json({ success: false, error: 'Server configuration error' }, { status: 500 });
+    }
 
     if (username === adminUser && password === adminPass) {
       // Create a secure token using hmac of the password
