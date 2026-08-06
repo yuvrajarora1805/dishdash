@@ -45,10 +45,10 @@ export async function POST(req: NextRequest) {
   let customerName = 'Anonymous';
 
   // Try to get logged-in customer (optional — allow guests too)
-  const customer = verifyCustomerSession(req);
-  if (customer) {
-    customerId = customer.id;
-    const customerRow = await dbGet('SELECT name FROM customers WHERE id = ?', [customer.id]);
+  const customerIdStr = verifyCustomerSession(req);
+  if (customerIdStr) {
+    customerId = customerIdStr;
+    const customerRow = await dbGet('SELECT name FROM customers WHERE id = ?', [customerIdStr]);
     if (customerRow) customerName = customerRow.name;
   }
 
