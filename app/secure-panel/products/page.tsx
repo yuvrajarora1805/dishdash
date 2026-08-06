@@ -12,6 +12,7 @@ const CATEGORY_MAP: Record<string, string[]> = {
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<any[]>([]);
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -33,7 +34,8 @@ export default function AdminProducts() {
 
   const handleTagChange = (newTag: string) => {
     setTag(newTag);
-    const subs = CATEGORY_MAP[newTag] || [];
+    const foundCat = dbCategories.find(c => c.name === newTag);
+    const subs = foundCat ? foundCat.subcategories.map((s: any) => s.name) : (CATEGORY_MAP[newTag] || []);
     setSubcategory(subs[0] || '');
   };
 
@@ -71,7 +73,20 @@ export default function AdminProducts() {
 
   useEffect(() => {
     fetchProducts();
+    fetchDbCategories();
   }, []);
+
+  const fetchDbCategories = async () => {
+    try {
+      const res = await fetch('/api/admin/categories');
+      if (res.ok) {
+        const data = await res.json();
+        setDbCategories(data);
+      }
+    } catch (e) {
+      console.error('Failed to load categories:', e);
+    }
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -93,8 +108,10 @@ export default function AdminProducts() {
     setName('');
     setPrice('');
     setImages([]);
-    setTag('Electronics');
-    setSubcategory('Audio');
+    const defaultTag = dbCategories[0]?.name || 'Electronics';
+    const defaultSub = dbCategories[0]?.subcategories?.[0]?.name || 'Audio';
+    setTag(defaultTag);
+    setSubcategory(defaultSub);
     setIsTrending(true);
     setStock('0');
     setVariants([]);
@@ -116,8 +133,8 @@ export default function AdminProducts() {
       mappedTag = 'Daily Essentials';
     }
     
-    const subs = CATEGORY_MAP[mappedTag] || [];
-    // If the legacy tag matches a subcategory (like 'Home'), select it. Otherwise, fallback to saved subcategory or first option.
+    const foundCat = dbCategories.find(c => c.name === mappedTag);
+    const subs = foundCat ? foundCat.subcategories.map((s: any) => s.name) : (CATEGORY_MAP[mappedTag] || []);
     const subVal = subs.includes(rawTag) ? rawTag : (p.data?.subcategory || subs[0] || '');
     
     setTag(mappedTag);
@@ -398,8 +415,16 @@ export default function AdminProducts() {
                         onChange={e => handleTagChange(e.target.value)}
                         className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 text-stone-900 outline-none focus:border-stone-900 transition-colors"
                       >
-                        <option value="Electronics">Electronics</option>
-                        <option value="Daily Essentials">Daily Essentials</option>
+                        {dbCategories.length > 0 ? (
+                          dbCategories.map(c => (
+                            <option key={c.id} value={c.name}>{c.name}</option>
+                          ))
+                        ) : (
+                          <>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Daily Essentials">Daily Essentials</option>
+                          </>
+                        )}
                       </select>
                     </div>
 
@@ -410,9 +435,13 @@ export default function AdminProducts() {
                         onChange={e => setSubcategory(e.target.value)}
                         className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 text-stone-900 outline-none focus:border-stone-900 transition-colors"
                       >
-                        {(CATEGORY_MAP[tag] || []).map(sub => (
-                          <option key={sub} value={sub}>{sub}</option>
-                        ))}
+                        {(() => {
+                          const foundCat = dbCategories.find(c => c.name === tag);
+                          const subs = foundCat ? foundCat.subcategories.map((s: any) => s.name) : (CATEGORY_MAP[tag] || []);
+                          return subs.map((sub: string) => (
+                            <option key={sub} value={sub}>{sub}</option>
+                          ));
+                        })()}
                       </select>
                     </div>
                   </div>

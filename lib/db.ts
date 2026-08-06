@@ -74,6 +74,7 @@ export function ensureDbReady(): Promise<void> {
             id VARCHAR(255) PRIMARY KEY,
             tenant_id VARCHAR(255) NOT NULL,
             name VARCHAR(255) NOT NULL,
+            parent_id VARCHAR(255) DEFAULT NULL,
             sort_order INT DEFAULT 0,
             created_at BIGINT NOT NULL
           )
@@ -129,6 +130,40 @@ export function ensureDbReady(): Promise<void> {
         try {
           await dbRun('ALTER TABLE orders ADD COLUMN remarks TEXT');
         } catch (e) {}
+
+        // Dynamically add parent_id to categories table if it doesn't exist
+        try {
+          await dbRun('ALTER TABLE categories ADD COLUMN parent_id VARCHAR(255) DEFAULT NULL');
+        } catch (e) {}
+
+        // Seed initial categories if none exist
+        try {
+          const catCount = await dbGet('SELECT COUNT(*) as count FROM categories WHERE tenant_id = ?', ['dishdash-solo']);
+          if (catCount && catCount.count === 0) {
+            console.log('[DB-Solo] Seeding initial categories...');
+            const defaultCats = [
+              { name: 'Electronics', subs: ['Audio', 'Smart Home', 'Wearables'] },
+              { name: 'Daily Essentials', subs: ['Home', 'Kitchen', 'Lifestyle'] }
+            ];
+            const { v4: uuidv4 } = require('uuid');
+            for (const c of defaultCats) {
+              const parentId = uuidv4();
+              await dbRun(
+                'INSERT INTO categories (id, tenant_id, name, parent_id, created_at) VALUES (?, ?, ?, NULL, ?)',
+                [parentId, 'dishdash-solo', c.name, Date.now()]
+              );
+              for (const sub of c.subs) {
+                await dbRun(
+                  'INSERT INTO categories (id, tenant_id, name, parent_id, created_at) VALUES (?, ?, ?, ?, ?)',
+                  [uuidv4(), 'dishdash-solo', sub, parentId, Date.now()]
+                );
+              }
+            }
+            console.log('[DB-Solo] Categories seeded successfully.');
+          }
+        } catch (seedErr) {
+          console.error('[DB-Solo] Failed to seed categories:', seedErr);
+        }
 
         await dbRun(`
           CREATE TABLE IF NOT EXISTS store_customers (
