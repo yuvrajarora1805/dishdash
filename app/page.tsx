@@ -56,6 +56,14 @@ export default function Home() {
         setCustomer(JSON.parse(savedCustomer));
       } catch (e) {}
     }
+
+    // Auto-open cart if redirected from a failed payment
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('cart') === 'open') {
+      setIsCartOpen(true);
+      // Clean the URL so a refresh doesn't re-open the cart
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }, [])
 
   // Save cart to localStorage when updated

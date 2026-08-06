@@ -194,12 +194,14 @@ export default function CheckoutPage() {
             theme: { color: '#1c1917' },
             modal: {
               ondismiss: async function () {
+                // Auto-cancel the pending order
                 await fetch('/api/orders/cancel', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ orderId: data.id })
                 });
-                window.location.href = '/checkout?error=payment_failed';
+                // Return to homepage and auto-open the cart
+                window.location.href = '/?cart=open';
               }
             }
           };
