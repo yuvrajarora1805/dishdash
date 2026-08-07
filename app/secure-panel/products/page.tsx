@@ -28,6 +28,7 @@ export default function AdminProducts() {
   const [subcategory, setSubcategory] = useState('Audio');
   const [isTrending, setIsTrending] = useState(false);
   const [stock, setStock] = useState('');
+  const [description, setDescription] = useState('');
   const [variants, setVariants] = useState<{name: string, hex: string, priceMultiplier: number}[]>([]);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -107,6 +108,7 @@ export default function AdminProducts() {
     setEditingProduct(null);
     setName('');
     setPrice('');
+    setDescription('');
     setImages([]);
     const defaultTag = dbCategories[0]?.name || 'Electronics';
     const defaultSub = dbCategories[0]?.subcategories?.[0]?.name || 'Audio';
@@ -122,6 +124,7 @@ export default function AdminProducts() {
     setEditingProduct(p);
     setName(p.name);
     setPrice(String(p.price));
+    setDescription(p.data?.description || '');
     setImages(p.images || []);
     
     // Map legacy tags to new categories
@@ -154,6 +157,7 @@ export default function AdminProducts() {
       id: editingProduct?.id,
       name,
       price: Number(price),
+      description,
       images: images,
       tag,
       subcategory,
@@ -444,6 +448,17 @@ export default function AdminProducts() {
                         })()}
                       </select>
                     </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-stone-500 uppercase">Product Description</label>
+                    <textarea
+                      rows={3}
+                      value={description}
+                      onChange={e => setDescription(e.target.value)}
+                      placeholder="Write detailed product features, specifications, or description..."
+                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 text-stone-900 outline-none focus:border-stone-900 transition-colors text-sm resize-none"
+                    />
                   </div>
 
                   <div className="flex items-center gap-2 pt-2">

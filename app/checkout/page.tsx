@@ -106,7 +106,7 @@ export default function CheckoutPage() {
     return total + Math.round(product.price * colorOpt.priceMultiplier) * item.qty
   }, 0)
 
-  const deliveryCharge = 40
+  const deliveryCharge = 80
 
   const cartItemCount = cart.reduce((t, i) => t + i.qty, 0)
 

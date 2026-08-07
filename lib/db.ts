@@ -1,6 +1,6 @@
 import mysql from 'mysql2/promise';
 
-export const DELIVERY_CHARGE = 40;
+export const DELIVERY_CHARGE = 80;
 
 let _pool: mysql.Pool | null = null;
 
