@@ -41,6 +41,9 @@ RUN mkdir -p /app/public/uploads && chown -R nextjs:nodejs /app/public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Link public directory inside standalone if required
+RUN mkdir -p /app/public/uploads && chown -R nextjs:nodejs /app/public
+
 USER nextjs
 
 EXPOSE 3012
