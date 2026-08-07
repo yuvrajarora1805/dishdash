@@ -4,7 +4,15 @@ import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { verifyAdminSession, unauthorizedResponse } from '@/lib/auth';
 
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_MIME_TYPES = [
+  'image/jpeg', 
+  'image/jpg', 
+  'image/png', 
+  'image/webp', 
+  'image/gif', 
+  'image/svg+xml',
+  'image/avif'
+];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export async function POST(request: NextRequest) {
@@ -32,7 +40,7 @@ export async function POST(request: NextRequest) {
       // 3. File Validations
       if (file.type && !ALLOWED_MIME_TYPES.includes(file.type.toLowerCase())) {
         return NextResponse.json({ 
-          error: `Invalid file type: ${file.name}. Only JPEG, PNG, WEBP, and GIF are allowed.` 
+          error: `Invalid file type: ${file.name}. Allowed types: JPEG, JPG, PNG, WEBP, GIF, SVG, AVIF.` 
         }, { status: 400 });
       }
 
