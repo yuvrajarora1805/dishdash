@@ -2,24 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
+import { verifyAdminSession, unauthorizedResponse } from '@/lib/auth';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Authenticate Request
-    const sessionCookie = request.cookies.get('admin_session');
-    const adminUser = process.env.ADMIN_USERNAME || 'admin';
-    const adminPass = process.env.ADMIN_PASSWORD || 'admin123';
-    
-    const expectedToken = crypto
-      .createHmac('sha256', adminPass)
-      .update(adminUser)
-      .digest('hex');
-
-    if (!sessionCookie || sessionCookie.value !== expectedToken) {
-      return NextResponse.json({ error: 'Unauthorized. Admin access required.' }, { status: 401 });
+    // 1. Authenticate Request using central auth verification
+    if (!verifyAdminSession(request)) {
+      return unauthorizedResponse();
     }
 
     // 2. Parse Multipart Form Data
@@ -38,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     for (const file of files) {
       // 3. File Validations
-      if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      if (file.type && !ALLOWED_MIME_TYPES.includes(file.type.toLowerCase())) {
         return NextResponse.json({ 
           error: `Invalid file type: ${file.name}. Only JPEG, PNG, WEBP, and GIF are allowed.` 
         }, { status: 400 });
@@ -46,12 +38,13 @@ export async function POST(request: NextRequest) {
 
       if (file.size > MAX_FILE_SIZE) {
         return NextResponse.json({ 
-          error: `File too large: ${file.name}. Max size limit is 5MB.` 
+          error: `File too large: ${file.name}. Max size limit is 10MB.` 
         }, { status: 400 });
       }
 
       // 4. Safe Filename Generation
-      const ext = path.extname(file.name) || '.jpg';
+      const originalExt = path.extname(file.name);
+      const ext = originalExt ? originalExt.toLowerCase() : '.jpg';
       const safeFilename = `${crypto.randomUUID()}${ext}`;
       const filepath = path.join(uploadDir, safeFilename);
 
@@ -67,6 +60,6 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('File upload error:', error);
-    return NextResponse.json({ error: 'Failed to process file upload' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Failed to process file upload' }, { status: 500 });
   }
 }

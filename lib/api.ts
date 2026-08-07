@@ -1,4 +1,4 @@
-import { dbAll, dbGet, dbRun, initSoloTenant } from './db';
+import { dbAll, dbGet, dbRun, initSoloTenant, DELIVERY_CHARGE } from './db';
 import { v4 as uuidv4 } from 'uuid';
 
 export const TENANT_ID = 'dishdash-solo';
@@ -99,11 +99,13 @@ export const SoloAPI = {
     return await dbAll('SELECT * FROM orders WHERE tenant_id = ? ORDER BY created_at DESC', [TENANT_ID]);
   },
   
-  async createOrder(data: { customer_name: string, customer_phone?: string, total_amount: number, payment_type: string, is_paid: boolean, items: any[] }) {
+  async createOrder(data: { customer_name: string, customer_phone?: string, total_amount: number, delivery_charge?: number, payment_type: string, is_paid: boolean, items: any[] }) {
     const orderId = uuidv4();
+    const deliveryCharge = data.delivery_charge || DELIVERY_CHARGE;
+    const totalAmount = data.total_amount + deliveryCharge;
     await dbRun(
-      'INSERT INTO orders (id, tenant_id, customer_name, customer_phone, payment_type, is_paid, status, total_amount, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [orderId, TENANT_ID, data.customer_name, data.customer_phone || '', data.payment_type, data.is_paid ? 1 : 0, 'placed', data.total_amount, Date.now(), Date.now()]
+      'INSERT INTO orders (id, tenant_id, customer_name, customer_phone, payment_type, is_paid, status, total_amount, delivery_charge, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [orderId, TENANT_ID, data.customer_name, data.customer_phone || '', data.payment_type, data.is_paid ? 1 : 0, 'placed', totalAmount, deliveryCharge, Date.now(), Date.now()]
     );
     
     for (const item of data.items) {

@@ -1,5 +1,7 @@
 import mysql from 'mysql2/promise';
 
+export const DELIVERY_CHARGE = 40;
+
 let _pool: mysql.Pool | null = null;
 
 function getPool(): mysql.Pool {
@@ -187,10 +189,16 @@ export function ensureDbReady(): Promise<void> {
             payment_status VARCHAR(50) DEFAULT 'pending',
             status VARCHAR(50) DEFAULT 'placed',
             total_amount INT NOT NULL,
+            delivery_charge INT DEFAULT 0,
             created_at BIGINT NOT NULL,
             updated_at BIGINT NOT NULL
           )
         `);
+
+        // Dynamically add delivery_charge column if it is a legacy table
+        try {
+          await dbRun('ALTER TABLE orders ADD COLUMN delivery_charge INT DEFAULT 0');
+        } catch (e) {}
 
         await dbRun(`
           CREATE TABLE IF NOT EXISTS order_items (

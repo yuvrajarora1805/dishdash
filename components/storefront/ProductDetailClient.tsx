@@ -275,8 +275,8 @@ export default function ProductDetailClient({ product }: { product: any }) {
                 <div className="font-black text-stone-900">
                   {formatINR(adjustedPrice)}
                 </div>
-                <div className="text-emerald-600 font-bold text-sm mt-1 flex items-center gap-1.5">
-                  <Truck className="w-4 h-4" /> FREE delivery
+                <div className="text-stone-600 font-bold text-sm mt-1 flex items-center gap-1.5">
+                  <Truck className="w-4 h-4" /> Delivery ₹40
                 </div>
               </div>
 

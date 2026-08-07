@@ -20,6 +20,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [successId, setSuccessId] = useState('')
+  const [successTotal, setSuccessTotal] = useState(0)
   const [paymentError, setPaymentError] = useState('')
   const [step] = useState(1) // 0=Cart, 1=Details, 2=Payment
 
@@ -100,9 +101,12 @@ export default function CheckoutPage() {
   const cartTotal = cart.reduce((total, item) => {
     const product = products.find(p => p.id === item.id)
     if (!product) return total
-    const colorOpt = COLOR_OPTIONS.find(c => c.name === item.color) || { priceMultiplier: 1.0 }
+    const variants = product.data?.variants?.length ? product.data.variants : COLOR_OPTIONS;
+    const colorOpt = variants.find((c: any) => c.name === item.color) || { priceMultiplier: 1.0 }
     return total + Math.round(product.price * colorOpt.priceMultiplier) * item.qty
   }, 0)
+
+  const deliveryCharge = 40
 
   const cartItemCount = cart.reduce((t, i) => t + i.qty, 0)
 
@@ -132,7 +136,10 @@ export default function CheckoutPage() {
     try {
       const orderItems = cart.map(item => {
         const p = products.find(prod => prod.id === item.id)
-        return { product_id: item.id, product_name: p?.name || 'Unknown', price: p?.price || 0, quantity: item.qty }
+        const variants = p?.data?.variants?.length ? p.data.variants : COLOR_OPTIONS;
+        const colorOpt = variants.find((c: any) => c.name === item.color) || { priceMultiplier: 1.0 }
+        const itemPrice = Math.round((p?.price || 0) * colorOpt.priceMultiplier)
+        return { product_id: item.id, product_name: p?.name || 'Unknown', price: itemPrice, quantity: item.qty }
       })
 
       const res = await fetch('/api/orders', {
@@ -145,12 +152,14 @@ export default function CheckoutPage() {
           payment_type: paymentMethod,
           source: 'web',
           items: orderItems,
+          delivery_charge: deliveryCharge,
           address: formattedAddress
         })
       })
       
       const data = await res.json()
       if (res.ok) {
+        setSuccessTotal(data.total)
         if (paymentMethod === 'razorpay') {
           const rzpRes = await fetch('/api/payment/razorpay/initiate', {
             method: 'POST',
@@ -285,7 +294,7 @@ export default function CheckoutPage() {
             <div className="h-px bg-stone-200" />
             <div className="flex justify-between items-center">
               <span className="text-stone-400 text-xs font-bold uppercase tracking-wider">Amount Paid</span>
-              <span className="font-black text-emerald-700 text-base">{formatINR(cartTotal)}</span>
+              <span className="font-black text-emerald-700 text-base">{formatINR(successTotal || cartTotal + deliveryCharge)}</span>
             </div>
           </motion.div>
 
@@ -608,7 +617,8 @@ export default function CheckoutPage() {
                 <div className="divide-y divide-stone-100 max-h-72 overflow-y-auto">
                   {cart.map(item => {
                     const product = products.find(p => p.id === item.id)
-                    const colorOpt = COLOR_OPTIONS.find(c => c.name === item.color) || { priceMultiplier: 1.0 }
+                    const variants = product?.data?.variants?.length ? product.data.variants : COLOR_OPTIONS;
+                    const colorOpt = variants.find((c: any) => c.name === item.color) || { priceMultiplier: 1.0 }
                     const adjustedPrice = Math.round((product?.price || 0) * colorOpt.priceMultiplier)
                     const images = typeof product?.images === 'string' ? JSON.parse(product?.images || '[]') : (product?.images || [])
                     const imgSrc = images[0] || null
@@ -650,12 +660,12 @@ export default function CheckoutPage() {
                     <span className="text-stone-500 font-semibold flex items-center gap-1.5">
                       <Truck className="w-3.5 h-3.5" /> Delivery
                     </span>
-                    <span className="text-emerald-600 font-black">FREE</span>
+                    <span className="font-bold text-stone-700">{formatINR(deliveryCharge)}</span>
                   </div>
                   <div className="h-px bg-stone-200 border-dashed" />
                   <div className="flex justify-between items-center">
                     <span className="text-stone-900 font-black text-lg">Total</span>
-                    <span className="text-stone-900 font-black text-xl">{formatINR(cartTotal)}</span>
+                    <span className="text-stone-900 font-black text-xl">{formatINR(cartTotal + deliveryCharge)}</span>
                   </div>
                 </div>
 
@@ -677,7 +687,7 @@ export default function CheckoutPage() {
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 p-4 z-40 shadow-2xl">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs text-stone-500 font-semibold">Order Total</span>
-            <span className="font-black text-stone-900 text-lg">{formatINR(cartTotal)}</span>
+            <span className="font-black text-stone-900 text-lg">{formatINR(cartTotal + deliveryCharge)}</span>
           </div>
           <button
             disabled={submitting}

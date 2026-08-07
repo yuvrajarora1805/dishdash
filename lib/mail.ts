@@ -153,9 +153,9 @@ export async function sendOrderStatusUpdateEmail({
 }
 
 export async function sendOrderConfirmationEmail({
-  to, customerName, orderId, totalAmount, paymentMethod, items
+  to, customerName, orderId, totalAmount, deliveryCharge, paymentMethod, items
 }: {
-  to: string; customerName: string; orderId: string; totalAmount: number; paymentMethod: string;
+  to: string; customerName: string; orderId: string; totalAmount: number; deliveryCharge: number; paymentMethod: string;
   items: { product_name: string; quantity: number; price: number }[];
 }) {
   const itemsHtml = items.map(item => `
@@ -199,6 +199,10 @@ export async function sendOrderConfirmationEmail({
               ${itemsHtml}
             </tbody>
             <tfoot>
+              <tr>
+                <td>Delivery Charge:</td>
+                <td class="text-right">₹${deliveryCharge}</td>
+              </tr>
               <tr>
                 <td>Total Paid:</td>
                 <td class="text-right" style="color: #10b981;">₹${totalAmount}</td>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dbRun, dbGet, dbAll, ensureDbReady } from '@/lib/db';
+import { dbRun, dbGet, dbAll, ensureDbReady, DELIVERY_CHARGE } from '@/lib/db';
 import { sendOrderStatusUpdateEmail, sendOrderConfirmationEmail } from '@/lib/mail';
 import { verifyAdminSession, unauthorizedResponse, verifyCustomerSession } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
@@ -34,25 +34,27 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { tenant_id, customer_name, customer_phone, payment_type, items, address } = body;
+    const deliveryCharge = Number(body.delivery_charge) || DELIVERY_CHARGE;
     
     if (!tenant_id || !items || !items.length) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const orderId = uuidv4();
-    let totalAmount = 0;
+    let subtotal = 0;
     
     for (const item of items) {
-      totalAmount += (Number(item.price) || 0) * (Number(item.quantity) || 1);
+      subtotal += (Number(item.price) || 0) * (Number(item.quantity) || 1);
     }
     
+    const totalAmount = subtotal + deliveryCharge;
     const now = Date.now();
     
     // Create order
     await dbRun(`
-      INSERT INTO orders (id, tenant_id, customer_name, customer_phone, status, total_amount, payment_status, payment_type, address, created_at, updated_at)
-      VALUES (?, ?, ?, ?, 'placed', ?, 'pending', ?, ?, ?, ?)
-    `, [orderId, tenant_id, customer_name, customer_phone, totalAmount, payment_type, address || null, now, now]);
+      INSERT INTO orders (id, tenant_id, customer_name, customer_phone, status, total_amount, delivery_charge, payment_status, payment_type, address, created_at, updated_at)
+      VALUES (?, ?, ?, ?, 'placed', ?, ?, 'pending', ?, ?, ?, ?)
+    `, [orderId, tenant_id, customer_name, customer_phone, totalAmount, deliveryCharge, payment_type, address || null, now, now]);
 
     // Create order items and deduct stock only for direct/offline payments (like UPI)
     for (const item of items) {
@@ -111,13 +113,14 @@ export async function POST(request: NextRequest) {
           customerName: customer_name,
           orderId: orderId,
           totalAmount,
+          deliveryCharge,
           paymentMethod: payment_type,
           items: items
         }).catch(err => console.error('Failed to send order email:', err));
       }
     }
 
-    return NextResponse.json({ id: orderId, total: totalAmount, success: true });
+    return NextResponse.json({ id: orderId, total: totalAmount, subtotal, deliveryCharge, success: true });
     
   } catch (error: any) {
     console.error('Order creation error:', error);

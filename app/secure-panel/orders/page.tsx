@@ -180,6 +180,7 @@ export default function AdminOrders() {
                   <th className="p-4">Customer</th>
                   <th className="p-4">Date</th>
                   <th className="p-4">Payment Method</th>
+                  <th className="p-4">Delivery</th>
                   <th className="p-4">Total</th>
                   <th className="p-4">Payment</th>
                   <th className="p-4">Order Status</th>
@@ -189,7 +190,7 @@ export default function AdminOrders() {
               <tbody className="divide-y divide-stone-100">
                 {filteredOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="p-8 text-center text-stone-500">No orders found.</td>
+                    <td colSpan={9} className="p-8 text-center text-stone-500">No orders found.</td>
                   </tr>
                 ) : (
                   filteredOrders.map((order: any) => {
@@ -210,6 +211,7 @@ export default function AdminOrders() {
                         </td>
                         <td className="p-4 text-xs text-stone-600 font-medium">{date}</td>
                         <td className="p-4 text-xs text-stone-600 font-bold uppercase">{order.payment_type}</td>
+                        <td className="p-4 text-xs text-stone-600 font-semibold">{formatINR(order.delivery_charge || 0)}</td>
                         <td className="p-4 font-black text-stone-900">{formatINR(order.total_amount)}</td>
                         <td className="p-4">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold capitalize border ${order.payment_status === 'paid' ? 'text-emerald-700 bg-emerald-100 border-emerald-200' : order.payment_status === 'failed' ? 'text-red-700 bg-red-100 border-red-200' : 'text-amber-700 bg-amber-100 border-amber-200'}`}>
@@ -305,6 +307,14 @@ export default function AdminOrders() {
                           <div className="font-bold text-stone-900">{formatINR(item.price * item.quantity)}</div>
                         </div>
                       ))}
+                      <div className="flex justify-between items-center pt-3 border-t border-stone-200 font-bold text-stone-900 text-base">
+                        <span>Subtotal</span>
+                        <span>{formatINR((selectedOrder.total_amount || 0) - (selectedOrder.delivery_charge || 0))}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm text-stone-500">
+                        <span>Delivery Charge</span>
+                        <span>{formatINR(selectedOrder.delivery_charge || 0)}</span>
+                      </div>
                       <div className="flex justify-between items-center pt-3 border-t border-stone-200 font-bold text-stone-900 text-lg">
                         <span>Total Paid</span>
                         <span>{formatINR(selectedOrder.total_amount)}</span>
